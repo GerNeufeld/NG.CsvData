@@ -1,0 +1,99 @@
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+
+# User-specific files
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.csproj.user
+*.vbproj.user
+*.fsproj.user
+*.useroscache
+
+# IDE - Microsoft Visual Studio
+.vs/
+*.VC.db
+*.VC.VC.opendb
+
+# IDE - JetBrains Rider
+[Rr]ider/
+*.sln.iml
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Icon?
+desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Visual Studio Code
+.vscode/
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+[bB]uild/
+[bB]uilds/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Oo]utput/
+[Ll]og/
+[Ll]ogs/
+[Tt]emp/
+[Tt]emporary/
+
+# NuGet Packages
+*.nupkg
+[Nn]uget/
+[Nn]uGet/
+[Nn]UGET/
+packages/
+[Pp]ackages/
+
+# MSTest test Results
+[Tt]est[Rr]esults/
+[Bb]uild[Ll]og.*
+
+# NUnit
+*.VisualState.xml
+TestResult.xml
+nunit-*.xml
+
+# Backup files
+*.bak
+*.tmp
+*.cache
+
+# Visual Studio cache/options
+*.[Rr]eSharper
+*.[Rr]eShaper
+*.[Oo]mnisharp
+*.DotSettings.user
+
+# Machine-specific settings file
+app.config
+web.config
