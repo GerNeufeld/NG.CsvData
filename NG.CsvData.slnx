@@ -1,6 +1,5 @@
 <Solution>
   <Folder Name="/Samples/">
-    <File Path="Samples/Sample.csv" />
     <Project Path="Samples/CsvDataReader.Sample/CsvDataReader.Sample.csproj" />
   </Folder>
   <Project Path="CsvData/CsvData.csproj" />

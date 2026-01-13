@@ -9,12 +9,12 @@ if (!File.Exists(csvFilename))
     throw new FileNotFoundException();
 
  
-/* Открываем ридер для чтения из файла Samples.csv с параметрами:
- *  - разделитель столбцов: ";"
- *  - кодировка файла: UTF-8
- *  - первая строка - заголовок: true
- *  - ограничитель строк: '"'
- *  - виртуальные поля: "Id" */
+/* Opening the reader to read from the Samples.csv file with parameters:
+ *  - column delimiter: ";"
+ *  - file encoding: UTF-8
+ *  - first line is header: true
+ *  - quote character: '"'
+ *  - virtual fields: "Id" */
 using CsvDataReader reader = CsvDataReader.Open(csvFilename,
         options: new()
         {
@@ -25,10 +25,10 @@ using CsvDataReader reader = CsvDataReader.Open(csvFilename,
             VirtualFields = ["Id"],
         });
 
-// значение последовательности для определения виртуального поля Id
+// sequence value for determining the virtual field Id
 int sequence = 0;
 
-// Определить событие получения значения виртуального поля
+// Define the event for getting the virtual field value
 reader.OnGetVirtualColumnValue += reader_OnGetVirtualColumnValue;
 
 void reader_OnGetVirtualColumnValue(object? sender, GetVirtualColumnEventArgs e)
@@ -39,12 +39,12 @@ void reader_OnGetVirtualColumnValue(object? sender, GetVirtualColumnEventArgs e)
     }
 }
 
-// Вывести в консоль заголовок
+// Print the header to console
 Console.WriteLine(new string('-', 45));
 Console.WriteLine($"|{reader.Headers["Id"].Name,-5}|{reader.Headers["Name"].Name,-15}|{reader.Headers[1].Name,-5}|{reader.Headers["City"].Name,-15}|");
 Console.WriteLine(new string('-', 45));
 
-// Прочитать построчно файл
+// Read the file line by line
 while (reader.Read())
 {
     sequence++;
