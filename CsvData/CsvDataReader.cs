@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿#nullable disable
+
 using System.Data;
-using System.IO;
 using System.Text;
-using System.Linq;
 using System.Globalization;
 
 namespace NG.CsvData
@@ -41,6 +39,8 @@ namespace NG.CsvData
 
         private CsvDataReader()
         {
+            _readersList = [];
+            OnGetVirtualColumnValue = null!;
         }
 
         private CsvDataReader_private[] _readersList;
@@ -81,7 +81,7 @@ namespace NG.CsvData
 
         public int Depth => CurrentReader.Depth;
 
-        public bool IsClosed => throw new NotImplementedException();
+        public bool IsClosed => CurrentReader?.IsClosed ?? true;
 
         public int RecordsAffected => CurrentReader.RecordsAffected;
 
@@ -101,14 +101,14 @@ namespace NG.CsvData
 
         public static CsvDataReader Open(Stream stream, CsvDataReaderOptions options = null, bool leaveOpen = false)
         {
-            return Open(new Stream[] { stream }, options, leaveOpen);
+            return Open([stream], options, leaveOpen);
         }
 
         public static CsvDataReader Open(Stream[] streamList, CsvDataReaderOptions options = null, bool leaveOpen = false)
         {
-            CsvDataReader result = new CsvDataReader()
+            CsvDataReader result = new()
             {
-                _readersList = streamList.Select(stream => new CsvDataReader_private(stream, options, leaveOpen)).ToArray(),
+                _readersList = [.. streamList.Select(stream => new CsvDataReader_private(stream, options, leaveOpen))],
             };
 
             result.NextReader();
@@ -131,12 +131,12 @@ namespace NG.CsvData
 
         public static CsvDataReader Open(string filename, CsvDataReaderOptions options = null)
         {
-            return Open(new string[] { filename }, options);
+            return Open([filename], options);
         }
 
         public static CsvDataReader Open(string[] filenames, CsvDataReaderOptions options = null)
         {
-            return Open(filenames.Select(filename => System.IO.File.OpenRead(filename)).ToArray(), options, false);
+            return Open([.. filenames.Select(filename => System.IO.File.OpenRead(filename))], options, false);
         }
 
 
@@ -318,8 +318,10 @@ namespace NG.CsvData
                 if (!stream.CanSeek)
                     throw new NotSupportedException("This stream does not support seeking");
 
-                _readerOptions = (ICsvDataReaderOptions)options.Clone() ?? new CsvDataReaderOptions();
+                _readerOptions = (ICsvDataReaderOptions)(options?.Clone() ?? new CsvDataReaderOptions());
                 _streamReader = new StreamReader(stream, _readerOptions.Encoding, false, BUFFER_SIZE, leaveOpen);
+                ParseValue = null!;
+                OnGetVirtualColumnValue = null!;
             }
 
 
@@ -330,13 +332,13 @@ namespace NG.CsvData
 
             private readonly ICsvDataReaderOptions _readerOptions;
 
-            private readonly StringBuilder _rawRecordBuilder = new StringBuilder(1024);
+            private readonly StringBuilder _rawRecordBuilder = new(1024);
 
-            private string[] _fields = null;
+            private string[] _fields = null!;
 
-            private List<string> _firstRecord = null;
+            private List<string> _firstRecord = null!;
 
-            private readonly CsvHeadersCollection _headers = new CsvHeadersCollection();
+            private readonly CsvHeadersCollection _headers = [];
 
             public ICsvHeadersCollection Headers => _headers;
 
@@ -344,7 +346,7 @@ namespace NG.CsvData
 
             private bool _isClosed = false;
 
-            private string _headersRawRecord = null;
+            private string _headersRawRecord = null!;
 
             private char[]
                 _buffer1 = new char[BUFFER_SIZE],
@@ -376,7 +378,7 @@ namespace NG.CsvData
             {
                 get
                 {
-                    return (_streamReader.BaseStream as FileStream)?.Name;
+                    return (_streamReader.BaseStream as FileStream)?.Name ?? string.Empty;
                 }
             }
 
@@ -659,10 +661,7 @@ namespace NG.CsvData
             {
                 private readonly StringBuilder _stringBuilder;
 
-                public FieldBuilder(int capacity = 0)
-                {
-                    _stringBuilder = capacity > 0 ? new StringBuilder(capacity) : new StringBuilder();
-                }
+                public FieldBuilder(int capacity = 0) => _stringBuilder = capacity > 0 ? new StringBuilder(capacity) : new StringBuilder();
 
                 public ReadFieldResult ReadResult { get; set; } = ReadFieldResult.None;
 
@@ -689,56 +688,53 @@ namespace NG.CsvData
             {
                 //ReadFieldResult result;
 
-                using (FieldBuilder fieldBuilder = new FieldBuilder(1024))
+                using FieldBuilder fieldBuilder = new(1024);
+                if (!_readerOptions.FirstLineIsHeader)
+                    _firstRecord = new List<string>(256);
+
+                do
                 {
-                    if (!_readerOptions.FirstLineIsHeader)
-                        _firstRecord = new List<string>(256);
-
-                    do
-                    {
-                        ReadField(fieldBuilder);
-                    }
-                    while (fieldBuilder.Length == 0 && fieldBuilder.ReadResult == ReadFieldResult.EndOfRecord);
-
-
-                    if (fieldBuilder.Length > 0)
-                    {
-                        _headers.Add(_readerOptions.FirstLineIsHeader ? fieldBuilder.ToString() : string.Empty);
-
-                        if (!_readerOptions.FirstLineIsHeader)
-                            _firstRecord.Add(fieldBuilder.ToString());
-                    }
-
-                    while (fieldBuilder.ReadResult == ReadFieldResult.EndOfField)
-                    {
-                        ReadField(fieldBuilder);
-                        _headers.Add(_readerOptions.FirstLineIsHeader ? fieldBuilder.ToString() : string.Empty);
-
-                        if (!_readerOptions.FirstLineIsHeader)
-                            _firstRecord.Add(fieldBuilder.ToString());
-                    }
-
-
-                    _csvFieldCount = _headers.Count;
-
-                    if (_readerOptions.VirtualFields != null)
-                    {
-                        _virtualFieldCount = _readerOptions.VirtualFields.Count;
-                        for (int i = 0; i < _virtualFieldCount; i++)
-                        {
-                            _headers.Add(_readerOptions.VirtualFields[i], true);
-                        }
-                    }
-
-                    _totalFieldCount = _headers.Count;
-
-
-                    _fields = new string[_headers.Count];
-
-                    if (_readerOptions.FirstLineIsHeader)
-                        _headersRawRecord = _rawRecordBuilder.ToString();
-
+                    ReadField(fieldBuilder);
                 }
+                while (fieldBuilder.Length == 0 && fieldBuilder.ReadResult == ReadFieldResult.EndOfRecord);
+
+
+                if (fieldBuilder.Length > 0)
+                {
+                    _headers.Add(_readerOptions.FirstLineIsHeader ? fieldBuilder.ToString() : string.Empty);
+
+                    if (!_readerOptions.FirstLineIsHeader)
+                        _firstRecord.Add(fieldBuilder.ToString());
+                }
+
+                while (fieldBuilder.ReadResult == ReadFieldResult.EndOfField)
+                {
+                    ReadField(fieldBuilder);
+                    _headers.Add(_readerOptions.FirstLineIsHeader ? fieldBuilder.ToString() : string.Empty);
+
+                    if (!_readerOptions.FirstLineIsHeader)
+                        _firstRecord.Add(fieldBuilder.ToString());
+                }
+
+
+                _csvFieldCount = _headers.Count;
+
+                if (_readerOptions.VirtualFields != null)
+                {
+                    _virtualFieldCount = _readerOptions.VirtualFields.Count;
+                    for (int i = 0; i < _virtualFieldCount; i++)
+                    {
+                        _headers.Add(_readerOptions.VirtualFields[i], true);
+                    }
+                }
+
+                _totalFieldCount = _headers.Count;
+
+
+                _fields = new string[_headers.Count];
+
+                if (_readerOptions.FirstLineIsHeader)
+                    _headersRawRecord = _rawRecordBuilder.ToString();
             }
 
 
@@ -763,7 +759,7 @@ namespace NG.CsvData
 
                 //ReadFieldResult result;
 
-                using (FieldBuilder fieldBuilder = new FieldBuilder(1024))
+                using (FieldBuilder fieldBuilder = new(1024))
                 {
                     ClearValues();
 
@@ -812,9 +808,8 @@ namespace NG.CsvData
             {
                 for (int i = 0; i < _fields.Length; i++)
                 {
-                    _fields[i] = null;
+                    _fields[i] = null!;
                 }
-                //_fields = new string[_headers.Count];
             }
 
 
@@ -834,76 +829,65 @@ namespace NG.CsvData
                         case CsvDbType.String:
                             return _fields[i];
                         case CsvDbType.DateTime:
-                            DateTime dateTimeResult;
-                            if (DateTime.TryParse(_fields[i], CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTimeResult))
+                            if (DateTime.TryParse(_fields[i], CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateTimeResult))
                                 return dateTimeResult;
                             break;
                         case CsvDbType.Boolean:
-                            bool boolResult;
-                            if (bool.TryParse(_fields[i], out boolResult))
+                            if (bool.TryParse(_fields[i], out bool boolResult))
                             {
                                 return boolResult;
                             }
                             break;
                         case CsvDbType.Byte:
-                            byte byteResult;
-                            if (byte.TryParse(_fields[i], out byteResult))
+                            if (byte.TryParse(_fields[i], out byte byteResult))
                             {
                                 return byteResult;
                             }
                             break;
                         case CsvDbType.Char:
-                            char charResult;
-                            if (char.TryParse(_fields[i], out charResult))
+                            if (char.TryParse(_fields[i], out char charResult))
                             {
                                 return charResult;
                             }
                             break;
                         case CsvDbType.Decimal:
-                            decimal decimalResult;
-                            if (decimal.TryParse(_fields[i], out decimalResult))
+                            if (decimal.TryParse(_fields[i], out decimal decimalResult))
                             {
                                 return decimalResult;
                             }
                             break;
                         case CsvDbType.Double:
-                            double doubleResult;
-                            if (double.TryParse(_fields[i], out doubleResult))
+                            if (double.TryParse(_fields[i], out double doubleResult))
                             {
                                 return doubleResult;
                             }
                             break;
                         case CsvDbType.Single:
-                            float floatResult;
-                            if (float.TryParse(_fields[i], out floatResult))
+                            if (float.TryParse(_fields[i], out float floatResult))
                             {
                                 return floatResult;
                             }
                             break;
                         case CsvDbType.Guid:
-                            Guid guidResult;
-                            if (Guid.TryParse(_fields[i], out guidResult))
+                            if (Guid.TryParse(_fields[i], out Guid guidResult))
                             {
                                 return guidResult;
                             }
                             break;
                         case CsvDbType.Int16:
-                            short shortResult;
-                            if (short.TryParse(_fields[i], out shortResult))
+                            if (short.TryParse(_fields[i], out short shortResult))
                             {
                                 return shortResult;
                             }
                             break;
                         case CsvDbType.Int32:
-                            int intResult;
-                            if (int.TryParse(_fields[i], out intResult))
+                            if (int.TryParse(_fields[i], out int intResult))
                             {
                                 return intResult;
                             }
                             break;
                         case CsvDbType.Int64:
-                            long longResult;
-                            if (long.TryParse(_fields[i], out longResult))
+                            if (long.TryParse(_fields[i], out long longResult))
                             {
                                 return longResult;
                             }
@@ -933,7 +917,7 @@ namespace NG.CsvData
                         return e.Value;
                     }
                     else
-                        return null;
+                        return null!;
                 }
             }
 
@@ -1053,7 +1037,10 @@ namespace NG.CsvData
                 if (i < _headers.Count)
                     return _headers[i].Name;
                 else
-                    return _readerOptions.VirtualFields[i - _headers.Count];
+                    if (i >= _headers.Count && _readerOptions.VirtualFields != null && i - _headers.Count < _readerOptions.VirtualFields.Count)
+                        return _readerOptions.VirtualFields[i - _headers.Count];
+                    else
+                        throw new IndexOutOfRangeException($"Index {i} is out of range for getting field name.");
             }
 
             public int GetOrdinal(string name)
@@ -1061,23 +1048,24 @@ namespace NG.CsvData
                 int result = _headers.GetOrdinal(name);
 
                 if (result < 0)
-                    result = _readerOptions.GetVirtualFieldsOrdinal(name);
+                    if (_readerOptions.VirtualFields != null)
+                        result = _readerOptions.GetVirtualFieldsOrdinal(name);
 
                 return result;
             }
 
             public DataTable GetSchemaTable()
             {
-                DataTable schemaTable = new DataTable("SchemaTable");
+                DataTable schemaTable = new("SchemaTable");
 
-                schemaTable.Columns.AddRange(new DataColumn[]
-                    {
+                schemaTable.Columns.AddRange(
+                    [
                         new DataColumn(COLUMN_NAME, typeof(string)),
                         new DataColumn(COLUMN_ORDINAL, typeof(Int32)),
                         new DataColumn(DATA_TYPE, typeof(Type)),
                         new DataColumn(ALLOW_DBNULL, typeof(bool)),
                         new DataColumn(IS_VIRTUAL_FIELD, typeof(bool)),
-                    });
+                    ]);
 
 
                 for (int i = 0; i < _headers.Count; i++)
@@ -1095,7 +1083,7 @@ namespace NG.CsvData
 
             public object GetValue(int i)
             {
-                return IsDBNull(i) ? (object)DBNull.Value : GetFieldValue(i);
+                return IsDBNull(i) ? (object)DBNull.Value : GetFieldValue(i)!;
             }
 
             public int GetValues(object[] values)
@@ -1195,6 +1183,8 @@ namespace NG.CsvData
     {
         internal GetVirtualColumnEventArgs()
         {
+            VirtualColumn = null!;
+            Value = null!;
         }
 
         public CsvColumn VirtualColumn { get; internal set; }

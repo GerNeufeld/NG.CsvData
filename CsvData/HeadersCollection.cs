@@ -1,7 +1,6 @@
-﻿using System;
+﻿#nullable disable
+
 using System.Collections;
-using System.Collections.Generic;
-using System.Text;
 
 namespace NG.CsvData
 {
@@ -19,8 +18,8 @@ namespace NG.CsvData
 
     internal class CsvHeadersCollection : IDisposable, ICsvHeadersCollection
     {
-        private Dictionary<string, CsvColumn> _indexses = new Dictionary<string, CsvColumn>(256);
-        private List<CsvColumn> _columns = new List<CsvColumn>(256);
+        private Dictionary<string, CsvColumn> _indexses = new(256);
+        private List<CsvColumn> _columns = new(256);
         int _index = -1;
 
         private const int MAX_COLUMN_NAME_SIZE = 120;
@@ -33,7 +32,7 @@ namespace NG.CsvData
             if (string.IsNullOrWhiteSpace(name))
                 name = $"Column{_index + 1}";
 
-            string baseName = name.Substring(0, Math.Min(MAX_COLUMN_NAME_SIZE, name.Length));
+            string baseName = name[..Math.Min(MAX_COLUMN_NAME_SIZE, name.Length)];
 
             int i = 0;
 
@@ -43,7 +42,7 @@ namespace NG.CsvData
                 name = $"{baseName}_{i}";
             }
 
-            CsvColumn column = new CsvColumn(name)
+            CsvColumn column = new(name)
             {
                 DbType = CsvDbType.String,
                 Ordinal = _index,
@@ -62,8 +61,8 @@ namespace NG.CsvData
         
         public int GetOrdinal(string name)
         {
-            if (_indexses.ContainsKey(name))
-                return _indexses[name].Ordinal;
+            if (_indexses.TryGetValue(name, out CsvColumn value))
+                return value.Ordinal;
             else
                 return -1;
         }
@@ -84,13 +83,12 @@ namespace NG.CsvData
                 {
                     // TODO: освободить управляемое состояние (управляемые объекты).
                     _indexses.Clear();
-                    _indexses = null;
+                    _indexses = null!;
                     _columns.Clear();
-                    _columns = null;
+                    _columns = null!;
                 }
 
                 // TODO: освободить неуправляемые ресурсы (неуправляемые объекты) и переопределить ниже метод завершения.
-                // TODO: задать большим полям значение NULL.
 
                 disposedValue = true;
             }
@@ -108,7 +106,6 @@ namespace NG.CsvData
             // Не изменяйте этот код. Разместите код очистки выше, в методе Dispose(bool disposing).
             Dispose(true);
             // TODO: раскомментировать следующую строку, если метод завершения переопределен выше.
-            GC.SuppressFinalize(this);
         }
         #endregion IDisposable Support
 
@@ -120,7 +117,7 @@ namespace NG.CsvData
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return _columns.GetEnumerator();;
+            return _columns.GetEnumerator();
         }
         #endregion //IEnumerable Support
     }

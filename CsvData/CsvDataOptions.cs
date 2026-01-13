@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿#nullable disable
+
 using System.Text;
 
 namespace NG.CsvData
@@ -51,7 +51,7 @@ namespace NG.CsvData
         public bool IgnoreBlankLines { get; set; } = true;
 
         private IReadOnlyList<string> _virtualFields = null;
-        private readonly Dictionary<string, int> _virtualFieldsDict = new Dictionary<string, int>(8);
+        private readonly Dictionary<string, int> _virtualFieldsDict = new(8);
 
         public IReadOnlyList<string> VirtualFields
         {
@@ -69,15 +69,16 @@ namespace NG.CsvData
                             _virtualFieldsDict.Add(value[i], i);
                         }
                     }
-                    _virtualFields = value;
+                    _virtualFields = value!;
                 }
             }
         }
 
         public int GetVirtualFieldsOrdinal(string fieldName)
         {
-
-            return _virtualFieldsDict[fieldName];
+            if (_virtualFieldsDict.TryGetValue(fieldName, out int ordinal))
+                return ordinal;
+            return -1;
         }
 
         public object Clone()
@@ -104,7 +105,7 @@ namespace NG.CsvData
 
         public bool RequireFieldQuotation { get; set; } = false;
 
-        public IReadOnlyList<string> Headers { get; set; } = null;
+        public IReadOnlyList<string> Headers { get; set; } = null!;
 
         public object Clone()
         {

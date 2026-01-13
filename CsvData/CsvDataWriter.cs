@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.IO;
+﻿#nullable disable
+
 using System.Collections;
-using System.Linq;
 
 namespace NG.CsvData
 {
@@ -17,15 +14,15 @@ namespace NG.CsvData
 
         public CsvDataWriter(Stream stream, CsvDataWriterOptions options = null, bool leaveOpen = false)
         {
-            _writerOptions = (CsvDataWriterOptions)options?.Clone() ?? new CsvDataWriterOptions();
+            _writerOptions = (CsvDataWriterOptions)(options?.Clone() as CsvDataWriterOptions) ?? new CsvDataWriterOptions();
 
             _streamWriter = new StreamWriter(stream, _writerOptions.Encoding, 256, leaveOpen);
 
-            _quoteStr = _writerOptions.Quote; // _writerOptions.Quote.HasValue ? _writerOptions.Quote.Value.ToString() : null;
+            _quoteStr = _writerOptions.Quote;
 
             if ((_writerOptions.Headers?.Count ?? 0) > 0)
             {
-                _headers = new CsvHeadersCollection();
+                _headers = [];
                 _fieldsCount = _writerOptions.Headers.Count;
                 string[] headersStr = new string[_fieldsCount];
 
@@ -39,7 +36,7 @@ namespace NG.CsvData
 
         }
 
-        private readonly ICsvDataWriterOptions _writerOptions;
+        private readonly ICsvDataWriterOptions _writerOptions = null!;
 
         private int _fieldsCount = -1;
 
@@ -47,7 +44,7 @@ namespace NG.CsvData
 
         private readonly StreamWriter _streamWriter;
 
-        private readonly CsvHeadersCollection _headers = null;
+        private readonly CsvHeadersCollection _headers = null!;
 
         public ICsvDataWriterOptions Options => _writerOptions;
 
@@ -58,7 +55,7 @@ namespace NG.CsvData
 
         public void Write(CsvRow row)
         {
-            Write(row.Values.ToArray());
+            Write([.. row.Values]);
         }
 
         public void Write(string[] record)
@@ -81,8 +78,8 @@ namespace NG.CsvData
             {
                 bool q = _writerOptions.RequireFieldQuotation ||
                     (record[i] ?? string.Empty).Contains(_writerOptions.Delimiter) ||
-                    (record[i] ?? string.Empty).Contains("\r") ||
-                    (record[i] ?? string.Empty).Contains("\n") ||
+                    (record[i] ?? string.Empty).Contains('\r') ||
+                    (record[i] ?? string.Empty).Contains('\n') ||
                     (_quoteStr.HasValue && (record[i] ?? string.Empty).Contains(_quoteStr.Value));
 
                 if (q)
@@ -94,19 +91,6 @@ namespace NG.CsvData
                 {
                     if (_quoteStr.HasValue)
                     {
-                        //int qindex = 0,
-                        //    start = 0;
-                        //do
-                        //{
-                        //    qindex = record[i].IndexOf(_quoteStr.Value, qindex + 1);
-                        //    if (qindex >= 0)
-                        //    {
-                        //        _streamWriter.Write(record[i].ToCharArray(start, qindex - start), 0, qindex - start);
-                        //        _streamWriter.Write(_quoteStr);
-                        //        start = qindex;
-                        //    }
-                        //} while (qindex >= 0);
-                        //_streamWriter.Write(record[i].ToCharArray(start, record[i].Length - start), 0, record[i].Length - start);
                         for (int k = 0; k < record[i].Length; k++)
                         {
                             if (record[i][k] == _quoteStr.Value)
@@ -151,8 +135,6 @@ namespace NG.CsvData
                     _streamWriter.Dispose();
                 }
 
-                // TODO: освободить неуправляемые ресурсы (неуправляемые объекты) и переопределить ниже метод завершения.
-                // TODO: задать большим полям значение NULL.
 
                 disposedValue = true;
             }
@@ -170,7 +152,6 @@ namespace NG.CsvData
             // Не изменяйте этот код. Разместите код очистки выше, в методе Dispose(bool disposing).
             Dispose(true);
             // TODO: раскомментировать следующую строку, если метод завершения переопределен выше.
-            // GC.SuppressFinalize(this);
         }
         #endregion
 
@@ -197,7 +178,7 @@ namespace NG.CsvData
 
                 foreach(string key in headers)
                 {
-                    _row.Add(key, null);
+                    _row.Add(key, null!);
                 }
             }
 

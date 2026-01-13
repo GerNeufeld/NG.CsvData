@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace NG.CsvData
+﻿namespace NG.CsvData
 {
     public sealed class CsvColumn
     {
