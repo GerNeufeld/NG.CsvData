@@ -81,31 +81,21 @@ namespace NG.CsvData
             {
                 if (disposing)
                 {
-                    // TODO: освободить управляемое состояние (управляемые объекты).
                     _indexses.Clear();
                     _indexses = null!;
                     _columns.Clear();
                     _columns = null!;
                 }
 
-                // TODO: освободить неуправляемые ресурсы (неуправляемые объекты) и переопределить ниже метод завершения.
-
                 disposedValue = true;
             }
         }
-
-        // TODO: переопределить метод завершения, только если Dispose(bool disposing) выше включает код для освобождения неуправляемых ресурсов.
-        // ~HeadersCollection() {
-        //   // Не изменяйте этот код. Разместите код очистки выше, в методе Dispose(bool disposing).
-        //   Dispose(false);
-        // }
 
         // Этот код добавлен для правильной реализации шаблона высвобождаемого класса.
         public void Dispose()
         {
             // Не изменяйте этот код. Разместите код очистки выше, в методе Dispose(bool disposing).
             Dispose(true);
-            // TODO: раскомментировать следующую строку, если метод завершения переопределен выше.
         }
         #endregion IDisposable Support
 

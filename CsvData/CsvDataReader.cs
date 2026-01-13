@@ -304,7 +304,6 @@ namespace NG.CsvData
         {
 
             private const char
-                // BOM = '\uFEFF',
                 LF = '\u000A',
                 CR = '\u000D',
                 NEL = '\u0085',
@@ -686,7 +685,6 @@ namespace NG.CsvData
 
             public void Initialize()
             {
-                //ReadFieldResult result;
 
                 using FieldBuilder fieldBuilder = new(1024);
                 if (!_readerOptions.FirstLineIsHeader)
@@ -756,8 +754,6 @@ namespace NG.CsvData
 
 
                 int fieldCount = 0;
-
-                //ReadFieldResult result;
 
                 using (FieldBuilder fieldBuilder = new(1024))
                 {
@@ -1114,7 +1110,7 @@ namespace NG.CsvData
 
             public bool Read()
             {
-                int fieldsCount; // = -1;
+                int fieldsCount;
                 do
                 {
                     fieldsCount = ReadRecord();
@@ -1148,8 +1144,6 @@ namespace NG.CsvData
                         _streamReader.Dispose();
 
                         _headers.Dispose();
-
-                        //ClearValues();
 
                         _fields = null;
                     }

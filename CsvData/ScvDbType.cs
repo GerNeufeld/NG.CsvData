@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Text;
-
-namespace NG.CsvData
+﻿namespace NG.CsvData
 {
     [Flags]
     public enum CsvDbType

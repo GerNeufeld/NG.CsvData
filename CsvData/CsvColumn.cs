@@ -17,8 +17,5 @@
 
         public bool IsVirtual { get; internal set; }
 
-        //public string Format { get; set; }
-
-        //public System.Globalization.CultureInfo CultureInfo { get; set; }
     }
 }
