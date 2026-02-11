@@ -64,6 +64,11 @@ namespace NG.CsvData
             WriteRecord(record);
         }
 
+        public void Flush()
+        {
+
+        }
+
         private void WriteRecord(string[] record)
         {
 

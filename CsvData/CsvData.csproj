@@ -7,7 +7,7 @@
     <AssemblyName>NG.CsvData</AssemblyName>
     <RootNamespace>NG.CsvData</RootNamespace>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Version>2.0.1</Version>
+    <Version>2.0.2</Version>
     <Authors>Gerhard Neufeld</Authors>
     <Description>CsvDataReader</Description>
     <Copyright>Gerhard Neufeld (c)</Copyright>
